@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Method notes</title>
+<meta name="description" content="The leave-one-out split, why the interaction test is the point of the project, and what a three-game sample can and cannot measure.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --raised:#f4f3ef; --ink:#0b0b0b; --ink-2:#43423f; --ink-3:#7d7b74;
+  --rule:#e3e2dc; --accent:#1c5cab; --mark:#eb6834;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --surface:#14140f; --raised:#1e1e18; --ink:#f2f1ec; --ink-2:#c9c7bf; --ink-3:#8d8b83;
+    --rule:#2e2e27; --accent:#7fb0f0; --mark:#f2895a;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--surface); color:var(--ink);
+  font:400 17px/1.62 "Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-feature-settings:"kern" 1;
+}
+.wrap{max-width:1020px;margin:0 auto;padding:0 22px}
+.bar{border-bottom:1px solid var(--rule);background:var(--surface)}
+.bar .wrap{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:baseline;padding-top:16px;padding-bottom:15px}
+.bar .slug{
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px;letter-spacing:.02em;color:var(--ink-2)
+}
+.bar nav{margin-left:auto;display:flex;gap:18px}
+.bar a{
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px;color:var(--ink-3);text-decoration:none;border-bottom:1px solid transparent
+}
+.bar a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:0 0 96px}
+.col{max-width:700px}
+h1{
+  font-family:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight:700;font-size:clamp(30px,5.4vw,46px);line-height:1.08;
+  letter-spacing:-.022em;margin:54px 0 20px;max-width:640px
+}
+h2{
+  font-family:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight:600;font-size:22px;line-height:1.24;letter-spacing:-.012em;
+  margin:52px 0 14px;max-width:700px
+}
+h3{font-family:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:600;
+  font-size:18.5px;letter-spacing:-.008em;margin:40px 0 8px}
+p.meta{font-size:14.5px;color:var(--ink-3);margin:-2px 0 16px}
+p.meta a{border-bottom-color:transparent}
+p.meta a:hover{border-bottom-color:currentColor}
+p{margin:0 0 18px;max-width:700px}
+p strong{font-weight:600}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(28,92,171,.32)}
+a:hover{border-bottom-color:currentColor}
+hr{border:0;border-top:1px solid var(--rule);margin:46px 0}
+ul,ol{margin:0 0 18px;padding-left:22px;max-width:700px}
+li{margin:0 0 8px}
+li>p{margin:0 0 8px}
+code{
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.86em;background:var(--raised);padding:.12em .34em;border-radius:3px
+}
+pre{
+  background:var(--raised);border:1px solid var(--rule);border-radius:5px;
+  padding:15px 17px;overflow-x:auto;margin:0 0 22px;max-width:820px
+}
+pre code{background:none;padding:0;font-size:13px;line-height:1.55}
+em{color:var(--ink-2)}
+.tw{overflow-x:auto;margin:0 0 26px;max-width:980px}
+table{border-collapse:collapse;font-size:14.5px;min-width:100%}
+th,td{padding:7px 15px 7px 0;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  font-size:11.5px;text-transform:uppercase;letter-spacing:.055em;
+  color:var(--ink-3);font-weight:500;border-bottom-color:var(--ink-3);white-space:normal
+}
+td.num{text-align:right;font-variant-numeric:tabular-nums;padding-right:22px}
+th.num{text-align:right;padding-right:22px}
+tbody tr:last-child td{border-bottom:0}
+figure{margin:30px 0 34px;max-width:980px}
+figure img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:4px}
+.foot{border-top:1px solid var(--rule);padding:22px 0 40px}
+.foot .wrap{
+  font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  font-size:11.5px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:8px 20px
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  h1{margin-top:36px}
+  th,td{padding-right:14px}
+}
+</style>
+</head>
+<body>
+<header class="bar"><div class="wrap"><span class="slug">west-shot-matchups</span><nav><a href="../index.html">findings</a><a href="https://github.com/jmsmarrelli/west-shot-matchups">repository</a><a href="https://jmsmarrelli.github.io/basketball-analytics/">all projects</a></nav></div></header>
+<main><div class="wrap">
+<h1>Method notes</h1>
+<p>The leave-one-out split, why the interaction test is the point of the project,
+and what a three-game sample can and cannot measure.</p>
+<h2>The unit and its size</h2>
+<p>A pairing is one team's offense against one team's defense in one season. Two
+teams meet three or four times, which is about 227 attempts from each side.
+17,775 pairings clear the 150-attempt floor.</p>
+<p>Everything in this project is shaped by that number. 227 attempts pins a zone
+share to within a couple of percentage points and pins a field goal percentage to
+within nothing at all, which is why the location work is a result and the
+conversion work is a caveat.</p>
+<h2>Leave the pairing out</h2>
+<p>The obvious version of this test regresses a pairing's shot mix on the two teams'
+season profiles. It is wrong, and not by a rounding error.</p>
+<p>A team's season profile contains the three or four games against this opponent.
+Predicting those games from an average that includes them is partly predicting
+them from themselves, and at four games in eighty-two the leakage is enough to
+inflate:</p>
+<p><code>output/leakage_check.csv</code> runs both versions side by side:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th></th>
+<th>With the pairing in</th>
+<th>With it left out</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rim, R²</td>
+<td class="num">0.546</td>
+<td class="num"><strong>0.482</strong></td>
+</tr>
+<tr>
+<td>Mid-range, R²</td>
+<td class="num">0.680</td>
+<td class="num"><strong>0.636</strong></td>
+</tr>
+<tr>
+<td>Above the break, defense coefficient</td>
+<td class="num">1.002</td>
+<td class="num"><strong>0.897</strong></td>
+</tr>
+<tr>
+<td>Conversion, offense coefficient</td>
+<td class="num">0.991</td>
+<td class="num"><strong>0.852</strong></td>
+</tr>
+<tr>
+<td>Conversion, defense coefficient</td>
+<td class="num">0.980</td>
+<td class="num"><strong>0.810</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The conversion row is the striking one. With the pairing left in, conversion looks
+like it carries in full; with it taken out, about a sixth of it is gone. Every
+number in this repository is the leave-one-out version.</p>
+<p><code>matchup.leave_pairing_out</code> does the subtraction on counts, zone by zone, before
+any share is computed, which is the only way to get it right — subtracting shares
+would be wrong by the difference in sample sizes.</p>
+<h2>The interaction test</h2>
+<p>This is what the project is for.</p>
+<p>The additive model says a pairing's deviation from league is the offense's usual
+deviation plus the defense's usual deviation. A <strong>matchup effect</strong> would be
+something on top of that: a rim-heavy offense meeting a rim-denying defense
+ending up somewhere other than the sum, because a strength meets a strength.</p>
+<p>The test adds one term per zone — the product of the two deviations, scaled by
+100 so the coefficient reads next to the others:</p>
+<pre><code>actual deviation = a x (offense) + b x (defense) + c x (offense x defense)
+</code></pre>
+<p>If <code>c</code> were meaningfully non-zero, matchups would be more than arithmetic and
+every scouting report that adds two profiles would be leaving something out. It
+is not. R² gains 0.0006, 0.0007, 0.0015, 0.0054 and 0.0006 across the five zones.</p>
+<p><strong>What a null here does and does not license.</strong> It says that at the level of a
+zone share over a whole season of pairings, there is no interaction to find. It
+does not say that no coach has ever taken away a specific action, or that a
+seven-game series with a shortened rotation behaves like a three-game regular
+season sample. Both of those are outside what this data can reach.</p>
+<h2>The asymmetry</h2>
+<p>The offensive coefficients average 0.996 across the five zones and the defensive
+ones 0.922. Both blocks are estimated from the same number of attempts, so the
+usual attenuation story does not obviously explain a gap in one direction, and it
+is consistent in all five zones.</p>
+<p>The natural reading is that an offense takes a little more of its identity into a
+given game than a defense does, which is what you would expect if the offense
+picks the action and the defense responds to it. It is a small effect and this
+project does not push on it further; the honest summary is "roughly half each,
+with the offense marginally ahead".</p>
+<h2>The conversion result</h2>
+<p>The same test on whether the shots went in returns coefficients of 0.85 and 0.81
+and an R² of 0.19. The R² is not the interesting number.</p>
+<p>At 227 attempts and a league make rate near 46%, the standard deviation a field
+goal percentage acquires from sampling alone is about 0.034. The observed spread
+across pairings is 0.037. So <strong>about 84% of the variance in a pairing's
+conversion is the sample size</strong> — and that estimate is conservative, because it
+treats attempts as independent coin flips with a common rate, which understates
+the true variance.</p>
+<p>There is no version of this project that measures matchup conversion effects.
+Nothing is priced with it, and every number in the atlas uses league conversion
+in each zone.</p>
+<h2>What the atlas is, given all that</h2>
+<p>For a pairing, the predicted zone shares are league plus both deviations,
+renormalised so the five still sum to one. Priced at the season's league points
+per attempt in each zone, that gives the shot quality of the matchup in points
+per 100 attempts.</p>
+<p><strong>One consequence is worth stating because it looks like a bug.</strong> Under an
+additive model with no interaction, a defense moves every offense's shot quality
+by the same amount, so a table of "how much does this defense hurt this offense"
+has an identical column for one side of it. That is the additive result restated,
+not a coding error, and it is why the headline figure shows the two sides'
+<em>levels</em> rather than their shifts.</p>
+<h2>Where this is weakest</h2>
+<p><strong>Regular season, and shot location only.</strong> No conversion, no free throws, no
+turnovers, no possessions. The attempt side of a matchup is the subject of the
+sibling <code>okc-defence</code> repository and is deliberately not combined here, because
+combining them needs a possession count neither file has.</p>
+<p><strong>A pairing is not a matchup plan.</strong> Three or four games in October and March
+against a healthy roster is not a seven-game series in May against a shortened
+one. The additive result is established on the former and the atlas is applied to
+a question about the latter, which is a real gap and is the reason the atlas is
+presented as a description rather than a projection.</p>
+<p><strong>Zone shares are coarse.</strong> Two teams can have identical five-zone profiles and
+completely different offenses. The coarseness is forced — the finer descriptions
+in these files are not comparable across the sample — and it means this
+instrument cannot see a scheme, only where the ball ended up.</p>
+<p><strong>Home and away are pooled.</strong> A pairing's three or four games are not split
+evenly between the two buildings, and nothing here adjusts for it.</p>
+</div></main>
+<footer class="foot"><div class="wrap"><span>west-shot-matchups</span><span>figures and tables regenerated by the pipeline in this repository</span></div></footer>
+</body>
+</html>
