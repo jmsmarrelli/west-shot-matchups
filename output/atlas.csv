@@ -1,4 +1,4 @@
-season,offense,defense,xpps_matchup,xpps_own_season,xpps_league,pred_Rim,own_Rim,pred_Paint,own_Paint,pred_Mid-range,own_Mid-range,pred_Corner 3,own_Corner 3,pred_Above the break,own_Above the break,shift_vs_own,vs_league
+season,offence,defence,xpps_matchup,xpps_own_season,xpps_league,pred_Rim,own_Rim,pred_Paint,own_Paint,pred_Mid-range,own_Mid-range,pred_Corner 3,own_Corner 3,pred_Above the break,own_Above the break,shift_vs_own,vs_league
 2025,SAS,OKC,1.09963,1.10466,1.0899,0.27389,0.30431,0.16063,0.15502,0.09588,0.10221,0.14096,0.11572,0.32864,0.32273,-0.50233,0.97342
 2025,SAS,DEN,1.10039,1.10466,1.0899,0.29673,0.30431,0.16335,0.15502,0.10711,0.10221,0.11892,0.11572,0.31389,0.32273,-0.42706,1.04868
 2025,SAS,HOU,1.09998,1.10466,1.0899,0.30845,0.30431,0.18087,0.15502,0.10232,0.10221,0.1039,0.11572,0.30446,0.32273,-0.46734,1.0084

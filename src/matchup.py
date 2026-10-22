@@ -2,14 +2,14 @@
 
 Every team has an offensive shot profile and every team has a defensive one, and
 the natural way to guess what a particular game will look like is to add them:
-start from the league's mix, add what this offense usually does to it, add what
-that defense usually does to it, and see what comes out.
+start from the league's mix, add what this offence usually does to it, add what
+that defence usually does to it, and see what comes out.
 
 That guess is testable, because twenty-two seasons contain about nineteen
 thousand team-pairings and each one has its own actual shot chart. The test is
 worth running before anyone builds a matchup report on top of the assumption,
-and it answers a second question on the way: when an offense that loves the rim
-meets a defense that takes the rim away, who wins? The two coefficients in the
+and it answers a second question on the way: when an offence that loves the rim
+meets a defence that takes the rim away, who wins? The two coefficients in the
 same regression say how much of a shot chart each side gets to choose.
 
 The five zones are the same coarse set the sibling projects use, for the same
@@ -62,15 +62,15 @@ def deviations(season_profile: pd.DataFrame, league: pd.DataFrame,
 
 def additive_prediction(pairs: pd.DataFrame, off_dev: pd.DataFrame,
                         def_dev: pd.DataFrame, league: pd.DataFrame) -> pd.DataFrame:
-    """League mix, plus what this offense does to it, plus what that defense does.
+    """League mix, plus what this offence does to it, plus what that defence does.
 
     Renormalised so the five shares still sum to one. The renormalisation is
     small - the deviations are a couple of percentage points each - but leaving
     it out would let a prediction quietly stop being a distribution.
     """
-    d = (pairs.merge(off_dev, left_on=["season", "offense"], right_on=["season", "team"])
+    d = (pairs.merge(off_dev, left_on=["season", "offence"], right_on=["season", "team"])
          .drop(columns="team")
-         .merge(def_dev, left_on=["season", "defense"], right_on=["season", "team"],
+         .merge(def_dev, left_on=["season", "defence"], right_on=["season", "team"],
                 suffixes=("", "_d"))
          .drop(columns="team")
          .merge(league, on="season"))
@@ -91,13 +91,19 @@ def leave_pairing_out(pairs: pd.DataFrame) -> pd.DataFrame:
     about five per cent of the sample, and it is worth four points of R-squared,
     which is more than the interaction term this project goes on to reject.
     """
-    key = ["season", "offense", "defense"]
-    off_tot = (pairs.groupby(["season", "offense", "zone5"], observed=True)["att"]
+    key = ["season", "offence", "defence"]
+    # Missing observed zones are zero attempts, not missing season profiles.
+    if pairs.duplicated(key + ["zone5"]).any():
+        raise ValueError("Expected unique season/offence/defence/zone counts")
+    grid = pairs[key].drop_duplicates().merge(pd.DataFrame({"zone5": ZONES}), how="cross")
+    pairs = grid.merge(pairs, on=key + ["zone5"], how="left", validate="one_to_one")
+    pairs["att"] = pairs["att"].fillna(0)
+    off_tot = (pairs.groupby(["season", "offence", "zone5"], observed=True)["att"]
                .sum().rename("off_total").reset_index())
-    def_tot = (pairs.groupby(["season", "defense", "zone5"], observed=True)["att"]
+    def_tot = (pairs.groupby(["season", "defence", "zone5"], observed=True)["att"]
                .sum().rename("def_total").reset_index())
-    p = (pairs.merge(off_tot, on=["season", "offense", "zone5"])
-         .merge(def_tot, on=["season", "defense", "zone5"]))
+    p = (pairs.merge(off_tot, on=["season", "offence", "zone5"])
+         .merge(def_tot, on=["season", "defence", "zone5"]))
     p["off_rest"] = p["off_total"] - p["att"]
     p["def_rest"] = p["def_total"] - p["att"]
 
@@ -117,13 +123,13 @@ def who_chooses(d: pd.DataFrame, league: pd.DataFrame) -> pd.DataFrame:
 
     One regression per zone, pooled over every pairing:
 
-        actual deviation  =  a x (the offense's deviation elsewhere)
-                          +  b x (the defense's deviation elsewhere)  +  error
+        actual deviation  =  a x (the offence's deviation elsewhere)
+                          +  b x (the defence's deviation elsewhere)  +  error
 
-    If shot location were entirely the offense's choice, a would be 1 and b would
+    If shot location were entirely the offence's choice, a would be 1 and b would
     be 0. A third fit adds the product of the two deviations, which is where a
-    genuine matchup effect would live: a rim-heavy offense meeting a rim-denying
-    defense should, if matchups are more than arithmetic, end up somewhere other
+    genuine matchup effect would live: a rim-heavy offence meeting a rim-denying
+    defence should, if matchups are more than arithmetic, end up somewhere other
     than the sum of the two.
     """
     d = d.merge(league, on="season")
