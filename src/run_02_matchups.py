@@ -45,12 +45,12 @@ def leakage_check(pairs: pd.DataFrame, loo: pd.DataFrame, league: pd.DataFrame,
     four-per-cent overlap is worth, and it is larger than anything else this
     project measures.
     """
-    full = (M.wide_shares(pairs, ["season", "offense", "defense"])
+    full = (M.wide_shares(pairs, ["season", "offence", "defence"])
             .rename(columns={z: f"actual_{z}" for z in M.SHARE}))
     full = full[full["att"] >= MIN_PAIR_ATT]
-    full = (full.merge(od, left_on=["season", "offense"], right_on=["season", "team"])
+    full = (full.merge(od, left_on=["season", "offence"], right_on=["season", "team"])
             .drop(columns="team")
-            .merge(dd, left_on=["season", "defense"], right_on=["season", "team"],
+            .merge(dd, left_on=["season", "defence"], right_on=["season", "team"],
                    suffixes=("", "_d")).drop(columns="team")
             .merge(league, on="season"))
 
@@ -75,8 +75,8 @@ def leakage_check(pairs: pd.DataFrame, loo: pd.DataFrame, league: pd.DataFrame,
 def prediction_error(d: pd.DataFrame, league: pd.DataFrame) -> pd.DataFrame:
     """How far each of three guesses lands from what actually happened.
 
-    League: assume every pairing looks like the league. Offense only: assume the
-    offense gets its way. Additive: both sides, added. Mean absolute error in
+    League: assume every pairing looks like the league. Offence only: assume the
+    offence gets its way. Additive: both sides, added. Mean absolute error in
     percentage points of share, and every guess is built from the rest of the
     season rather than from the games being predicted.
     """
@@ -100,17 +100,17 @@ def prediction_error(d: pd.DataFrame, league: pd.DataFrame) -> pd.DataFrame:
 
 def conversion_leakage(pairs: pd.DataFrame) -> pd.DataFrame:
     """Conversion additivity with and without the pairing in the season average."""
-    key = ["season", "offense", "defense"]
+    key = ["season", "offence", "defence"]
     g = (pairs.groupby(key, observed=True)
          .agg(made=("made", "sum"), att=("att", "sum")).reset_index())
-    off_tot = (pairs.groupby(["season", "offense"], observed=True)
+    off_tot = (pairs.groupby(["season", "offence"], observed=True)
                .agg(o_made=("made", "sum"), o_att=("att", "sum")).reset_index())
-    def_tot = (pairs.groupby(["season", "defense"], observed=True)
+    def_tot = (pairs.groupby(["season", "defence"], observed=True)
                .agg(d_made=("made", "sum"), d_att=("att", "sum")).reset_index())
     lg = (pairs.groupby("season", observed=True)
           .agg(l_made=("made", "sum"), l_att=("att", "sum")).reset_index())
     lg["fg_lg"] = lg["l_made"] / lg["l_att"]
-    p = (g.merge(off_tot, on=["season", "offense"]).merge(def_tot, on=["season", "defense"])
+    p = (g.merge(off_tot, on=["season", "offence"]).merge(def_tot, on=["season", "defence"])
          .merge(lg[["season", "fg_lg"]], on="season"))
     p = p[p["att"] >= MIN_PAIR_ATT].copy()
     p["fg"] = p["made"] / p["att"]
@@ -143,19 +143,19 @@ def conversion_check(pairs: pd.DataFrame) -> pd.DataFrame:
     The coefficients are what to read here; the R-squared is a statement about
     the sample size.
     """
-    key = ["season", "offense", "defense"]
+    key = ["season", "offence", "defence"]
     g = (pairs.groupby(key, observed=True)
          .agg(made=("made", "sum"), att=("att", "sum")).reset_index())
-    off_tot = (pairs.groupby(["season", "offense"], observed=True)
+    off_tot = (pairs.groupby(["season", "offence"], observed=True)
                .agg(o_made=("made", "sum"), o_att=("att", "sum")).reset_index())
-    def_tot = (pairs.groupby(["season", "defense"], observed=True)
+    def_tot = (pairs.groupby(["season", "defence"], observed=True)
                .agg(d_made=("made", "sum"), d_att=("att", "sum")).reset_index())
     lg = (pairs.groupby("season", observed=True)
           .agg(l_made=("made", "sum"), l_att=("att", "sum")).reset_index())
     lg["fg_lg"] = lg["l_made"] / lg["l_att"]
 
-    p = (g.merge(off_tot, on=["season", "offense"])
-         .merge(def_tot, on=["season", "defense"])
+    p = (g.merge(off_tot, on=["season", "offence"])
+         .merge(def_tot, on=["season", "defence"])
          .merge(lg[["season", "fg_lg"]], on="season"))
     p = p[p["att"] >= MIN_PAIR_ATT].copy()
     p["fg"] = p["made"] / p["att"]
@@ -207,7 +207,7 @@ def atlas(od: pd.DataFrame, dd: pd.DataFrame, league: pd.DataFrame,
             pred = pred / pred.sum()
             own = np.clip(base + o, 1e-4, None)
             own = own / own.sum()
-            row = {"season": season, "offense": a, "defense": b,
+            row = {"season": season, "offence": a, "defence": b,
                    "xpps_matchup": float(pred @ pps),
                    "xpps_own_season": float(own @ pps),
                    "xpps_league": float(base @ pps)}
@@ -230,9 +230,9 @@ def fig_who_chooses(w: pd.DataFrame) -> None:
     x = np.arange(len(w))
     width = 0.36
     ax.bar(x - width / 2, w["offence_coef"], width, color=S.SERIES[0], zorder=3,
-           label="what the offense usually does")
+           label="what the offence usually does")
     ax.bar(x + width / 2, w["defence_coef"], width, color=S.SERIES[1], zorder=3,
-           label="what the defense usually does")
+           label="what the defence usually does")
     ax.axhline(1, color=S.INK_3, lw=1.1, ls=(0, (4, 3)), zorder=4)
     ax.annotate("1.00: carried through in full", (len(w) - 0.5, 1.0), xytext=(6, 4),
                 textcoords="offset points", fontsize=8.8, color=S.INK_3)
@@ -241,16 +241,12 @@ def fig_who_chooses(w: pd.DataFrame) -> None:
         ax.text(xi, v + 0.02, f"{v:.2f}", ha="center", fontsize=8.8, color=S.INK_2)
     ax.set_xticks(x, w["zone"])
     ax.set_ylim(0, 1.28)
-    ax.set_ylabel("Effect on the shot chart that actually happened")
-    ax.set_title("A shot chart is half chosen and half imposed", loc="left")
+    ax.set_ylabel("Coefficient in the fitted zone-share model")
+    ax.set_title("Offensive and defensive profiles both contribute", loc="left")
     ax.legend(frameon=False, fontsize=9, loc="lower right")
     S.strip(ax)
     ax.grid(axis="x", visible=False)
-    S.caption(fig, "One regression per zone over 17,775 team pairings, 2003-04 to 2024-25: how "
-                   "far a pairing's shot mix sat from league average, against how far each side "
-                   "usually sits from it. Every coefficient is within two per cent of one, and "
-                   "the two sides are within half a per cent of each other in every zone. Shot "
-                   "location adds.")
+    S.caption(fig, 'One pooled regression per zone. Inputs use each side’s other opponents in the same season, including zero-attempt zones. Coefficients are descriptive fitted associations, not causal shares of control or a chronological forecast.')
     fig.tight_layout()
     fig.savefig(FIG / "01_who_chooses.png")
     plt.close(fig)
@@ -262,7 +258,7 @@ def fig_prediction(e: pd.DataFrame) -> None:
     width = 0.26
     for i, (col, label, colour) in enumerate((
             ("league", "assume league average", S.NEUTRAL),
-            ("offence_only", "assume the offense gets its way", S.SERIES[0]),
+            ("offence_only", "assume the offence gets its way", S.SERIES[0]),
             ("additive", "add both sides", S.SERIES[1]))):
         ax.bar(x + (i - 1) * width, e[col], width, color=colour, zorder=3, label=label)
     ax.set_xticks(x, e["zone"])
@@ -271,9 +267,7 @@ def fig_prediction(e: pd.DataFrame) -> None:
     ax.legend(frameon=False, fontsize=9, loc="upper right")
     S.strip(ax)
     ax.grid(axis="x", visible=False)
-    S.caption(fig, "Lower is better. Adding the defense to the offense removes about a fifth of "
-                   "what is left after the offense, in every zone. What remains is mostly the "
-                   "three or four games a pairing gets.")
+    S.caption(fig, 'Mean absolute errors for historical pairings using same-season profiles. Lower is better. The comparisons are retrospective and do not test a pregame forecast; later-season games can enter the input profiles.')
     fig.tight_layout()
     fig.savefig(FIG / "02_prediction.png")
     plt.close(fig)
@@ -284,8 +278,8 @@ def fig_profiles(od: pd.DataFrame, dd: pd.DataFrame, season: int,
     fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.8), sharey=True)
     zones = [SHORT[z] for z in M.SHARE]
     y = np.arange(len(teams))
-    for ax, dev, side, title in ((axes[0], od, "off", "On offense"),
-                                 (axes[1], dd, "def", "On defense")):
+    for ax, dev, side, title in ((axes[0], od, "off", "On offence"),
+                                 (axes[1], dd, "def", "On defence")):
         mat = np.array([[100 * dev[(dev["season"] == season) & (dev["team"] == t)]
                          .iloc[0][f"{side}_{z}"] for z in M.SHARE] for t in teams])
         vmax = np.abs(mat).max()
@@ -304,8 +298,8 @@ def fig_profiles(od: pd.DataFrame, dd: pd.DataFrame, season: int,
             spine.set_visible(False)
         ax.tick_params(length=0)
     S.caption(fig, f"Share of attempts against the league in {season_label(season)}, in "
-                   "percentage points. On offense this is where a team likes to shoot from; on "
-                   "defense it is where it lets you. Red is more than the league, blue is "
+                   "percentage points. On offence this is where a team likes to shoot from; on "
+                   "defence it is where it lets you. Red is more than the league, blue is "
                    "less.")
     fig.tight_layout()
     fig.savefig(FIG / "03_profiles.png")
@@ -313,7 +307,7 @@ def fig_profiles(od: pd.DataFrame, dd: pd.DataFrame, season: int,
 
 
 def fig_atlas(a: pd.DataFrame, subject: str) -> None:
-    d = a[a["offense"] == subject].set_index("defense")
+    d = a[a["offence"] == subject].set_index("defence")
     order = [t for t in CONTENDERS if t in d.index]
     d = d.loc[order]
     zones = [SHORT[z] for z in M.SHARE]
@@ -331,13 +325,13 @@ def fig_atlas(a: pd.DataFrame, subject: str) -> None:
     ax.set_yticks(range(len(order)),
                   [f"{FULL_NAME.get(t, t)}   {d.loc[t, 'shift_vs_own']:+.2f}"
                    for t in order], fontsize=9)
-    ax.set_title(f"What each defense does to {FULL_NAME.get(subject, subject)}'s shot chart",
+    ax.set_title(f"What each defence does to {FULL_NAME.get(subject, subject)}'s shot chart",
                  loc="left")
     ax.grid(False)
     for spine in ax.spines.values():
         spine.set_visible(False)
     ax.tick_params(length=0)
-    S.caption(fig, "Percentage points of shot share moved against what this offense generates on "
+    S.caption(fig, "Percentage points of shot share moved against what this offence generates on "
                    "an average night, with the value of the whole change in points per 100 "
                    "attempts beside each opponent. Priced at league conversion in each zone, so "
                    "it is a statement about where the shots come from and not about who makes "
@@ -351,12 +345,12 @@ def fig_edge(a: pd.DataFrame, subject: str) -> None:
     """The level each side's shot chart is worth in each matchup, not the shift.
 
     The shift is the wrong thing to draw once the interaction has been rejected:
-    a defense moves every offense by the same amount, so a chart of shifts on the
+    a defence moves every offence by the same amount, so a chart of shifts on the
     defensive side would be six identical bars. The levels are what differ, and
     the gap between them is the matchup.
     """
-    ours = a[a["offense"] == subject].set_index("defense")
-    theirs = a[a["defense"] == subject].set_index("offense")
+    ours = a[a["offence"] == subject].set_index("defence")
+    theirs = a[a["defence"] == subject].set_index("offence")
     order = [t for t in CONTENDERS if t in ours.index and t in theirs.index]
     fig, ax = plt.subplots(figsize=(9.4, 5.0))
     y = np.arange(len(order))
@@ -428,7 +422,7 @@ def main() -> None:
     a = atlas(od, dd, league, zone_pps, ATLAS_SEASON, teams)
     a.round(5).to_csv(OUT / "atlas.csv", index=False)
 
-    edge = a[((a["offense"] == SUBJECT) | (a["defense"] == SUBJECT))].copy()
+    edge = a[((a["offence"] == SUBJECT) | (a["defence"] == SUBJECT))].copy()
     edge.round(5).to_csv(OUT / "matchup_edge.csv", index=False)
 
     fig_who_chooses(w)
@@ -455,9 +449,9 @@ def main() -> None:
     print("\n--- the same test on conversion ---")
     print(conv.T.to_string(header=False, float_format=lambda v: f"{v:.4f}"))
 
-    print(f"\n--- {season_label(ATLAS_SEASON)}: what each defense does to "
+    print(f"\n--- {season_label(ATLAS_SEASON)}: what each defence does to "
           f"{SUBJECT}'s shot chart ---")
-    ours = a[a["offense"] == SUBJECT].set_index("defense")
+    ours = a[a["offence"] == SUBJECT].set_index("defence")
     cols = [f"pred_{SHORT[z]}" for z in M.SHARE]
     own = ours.iloc[0][[f"own_{SHORT[z]}" for z in M.SHARE]].to_numpy()
     show = ours[cols].copy()
@@ -467,7 +461,7 @@ def main() -> None:
     print(show.round(2).to_string())
 
     print(f"\n--- and what {SUBJECT} does to theirs ---")
-    theirs = a[a["defense"] == SUBJECT].set_index("offense")
+    theirs = a[a["defence"] == SUBJECT].set_index("offence")
     print(theirs[["shift_vs_own", "xpps_matchup", "xpps_own_season"]]
           .to_string(float_format=lambda v: f"{v:.4f}"))
 

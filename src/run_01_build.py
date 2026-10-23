@@ -3,8 +3,8 @@
     python src/run_01_build.py
 
 Every attempt gets the team that took it and the team that faced it, so the same
-rows produce three tables: what each team did on offense, what it allowed on
-defense, and what happened in each specific pairing.
+rows produce three tables: what each team did on offence, what it allowed on
+defence, and what happened in each specific pairing.
 
 Writes data/processed/season_profiles.csv, data/processed/pair_profiles.csv,
 output/league_zones.csv and output/coverage.csv.
@@ -62,8 +62,8 @@ def load_season(season: int) -> tuple[pd.DataFrame, dict]:
     d = pd.DataFrame({
         "season": season,
         "game_id": raw["GAME_ID"].to_numpy(),
-        "offense": team.to_numpy(),
-        "defense": opponent,
+        "offence": team.to_numpy(),
+        "defence": opponent,
         "zone5": M.zone5(raw["BASIC_ZONE"]),
         "made": raw["SHOT_MADE"].to_numpy().astype(int),
         "points": np.where(raw["SHOT_MADE"].to_numpy(),
@@ -72,7 +72,7 @@ def load_season(season: int) -> tuple[pd.DataFrame, dict]:
 
     audit = {"season": season, "rows": int(len(raw)), "kept": int(len(d)),
              "dropped": int(drop.sum()), "games": int(d["game_id"].nunique()),
-             "pairings": int(d.groupby(["offense", "defense"]).ngroups)}
+             "pairings": int(d.groupby(["offence", "defence"]).ngroups)}
     return d, audit
 
 
@@ -95,24 +95,24 @@ def main() -> None:
     league["fg"] = league["made"] / league["att"]
     league.round(6).to_csv(OUT / "league_zones.csv", index=False)
 
-    off = (shots.groupby(["season", "offense", "zone5"], observed=True).agg(**agg)
-           .reset_index().rename(columns={"offense": "team"}).assign(side="off"))
-    dfn = (shots.groupby(["season", "defense", "zone5"], observed=True).agg(**agg)
-           .reset_index().rename(columns={"defense": "team"}).assign(side="def"))
+    off = (shots.groupby(["season", "offence", "zone5"], observed=True).agg(**agg)
+           .reset_index().rename(columns={"offence": "team"}).assign(side="off"))
+    dfn = (shots.groupby(["season", "defence", "zone5"], observed=True).agg(**agg)
+           .reset_index().rename(columns={"defence": "team"}).assign(side="def"))
     pd.concat([off, dfn], ignore_index=True).to_csv(PROC / "season_profiles.csv",
                                                     index=False)
 
-    pairs = (shots.groupby(["season", "offense", "defense", "zone5"], observed=True)
+    pairs = (shots.groupby(["season", "offence", "defence", "zone5"], observed=True)
              .agg(**agg).reset_index())
-    games = (shots.groupby(["season", "offense", "defense"], observed=True)["game_id"]
+    games = (shots.groupby(["season", "offence", "defence"], observed=True)["game_id"]
              .nunique().rename("games").reset_index())
-    pairs = pairs.merge(games, on=["season", "offense", "defense"])
+    pairs = pairs.merge(games, on=["season", "offence", "defence"])
     pairs.to_csv(PROC / "pair_profiles.csv", index=False)
 
     cov = pd.DataFrame(audit)
     cov.to_csv(OUT / "coverage.csv", index=False)
 
-    n_pairs = pairs.groupby(["season", "offense", "defense"]).ngroups
+    n_pairs = pairs.groupby(["season", "offence", "defence"]).ngroups
     print(f"\n{len(shots):,} attempts, {shots['game_id'].nunique():,} games")
     print(f"{n_pairs:,} team pairings, {games['games'].min()}-{games['games'].max()} "
           f"games each")

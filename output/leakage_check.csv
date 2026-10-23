@@ -1,13 +1,13 @@
 quantity,leakage,offence_coef,defence_coef,r2
-Above the break,pairing left out,1.00884,0.89683,0.55448
+Above the break,pairing left out,1.0087,0.8968,0.55447
 Above the break,season profile includes the pairing,1.00439,1.00166,0.60802
-Corner 3,pairing left out,0.98016,0.91017,0.46248
+Corner 3,pairing left out,0.98798,0.92351,0.4639
 Corner 3,season profile includes the pairing,1.00229,0.99188,0.52868
-Mid-range,pairing left out,1.01616,0.92122,0.63547
+Mid-range,pairing left out,1.01669,0.92173,0.63548
 Mid-range,season profile includes the pairing,1.0038,0.9878,0.6801
-Paint,pairing left out,0.97064,0.91694,0.42653
+Paint,pairing left out,0.97064,0.91724,0.42657
 Paint,season profile includes the pairing,0.99443,0.98656,0.4953
-Rim,pairing left out,1.00508,0.96532,0.48145
+Rim,pairing left out,1.0054,0.96589,0.48154
 Rim,season profile includes the pairing,1.01835,1.0204,0.54577
 Conversion,season profile includes the pairing,0.99119,0.98045,0.27985
 Conversion,pairing left out,0.85172,0.80966,0.18813

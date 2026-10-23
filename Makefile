@@ -1,8 +1,10 @@
-PY := python3
+# Pipeline stages share generated inputs and must run in order.
+.NOTPARALLEL:
+PY ?= python3
 
 .PHONY: all build matchups clean site
 
-all: build matchups
+all: verify-data build matchups
 
 build:
 	$(PY) src/run_01_build.py
@@ -10,9 +12,24 @@ build:
 matchups:
 	$(PY) src/run_02_matchups.py
 
-# Regenerate the GitHub Pages page from README.md. Needs `pip install markdown`.
+# Regenerate the GitHub Pages page from README.md. Needs `pip install -r requirements.txt`.
 site:
 	$(PY) tools/site.py
 
 clean:
 	rm -f figures/*.png output/*.csv data/processed/*
+
+.PHONY: test
+test:
+	$(PY) -m pytest -q tests
+
+.PHONY: fetch-data verify-data
+fetch-data:
+	$(PY) tools/fetch_data.py
+
+verify-data:
+	$(PY) tools/fetch_data.py --check
+
+.PHONY: report
+report:
+	$(PY) tools/report.py
